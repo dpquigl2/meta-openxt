@@ -1,4 +1,1 @@
-This repository is home of the OpenXT OpenEmbedded build metadata.
-For information about OpenXT see our website @ http://openxt.org
-For instructions on how to build OpenXT from source see our GitHub wiki @ https://github.com/OpenXT/openxt/wiki/
-
+This is an experimental repository for turning the OpenEmbedded meta data for OpenXT into a real OpenEmbedded layer instead of a clone of the repository. It is not usable to build OpenXT. The recipies needed by OpenXT will slowly be added to this repo as they are fixed to build against the latest OpenEmbedded master version.
