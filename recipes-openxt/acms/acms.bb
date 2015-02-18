@@ -27,15 +27,15 @@ LIC_FILES_CHKSUM = "file://GM45_GS45_PM45-SINIT_51/license.txt;md5=60d123634e0b9
                     file://3rd_gen_i5_i7-SINIT_67/license.txt;md5=a879c484244808a2202d65166a2f3f72 \
                     file://4th_gen_i5_i7-SINIT_75/license.txt;md5=a879c484244808a2202d65166a2f3f72"
 
-SRC_URI = "http://openxt.xci-test.com/mirror/GM45_GS45_PM45-SINIT_51.zip;name=gm45 \
-           http://openxt.xci-test.com/mirror/Q45_Q43-SINIT_51.zip;name=q45 \
-           http://openxt.xci-test.com/mirror/Q35-SINIT_51.zip;name=q35 \
-           http://openxt.xci-test.com/mirror/i5_i7_DUAL-SINIT_51.zip;name=i5 \
-           http://openxt.xci-test.com/mirror/i7_QUAD-SINIT_51.zip;name=i7 \
-           http://openxt.xci-test.com/mirror/Xeon-5600-3500-SINIT-v1.1.zip;name=xeon_5600 \
-           http://openxt.xci-test.com/mirror/Xeon-E7-8800-4800-2800-SINIT-v1.1.zip;name=xeon_e7 \
-           http://openxt.xci-test.com/mirror/3rd-gen-i5-i7-sinit-67.zip;name=ivb_snb \
-           http://openxt.xci-test.com/mirror/4th-gen-i5-i7-sinit-75.zip;name=hsw \
+SRC_URI = "http://mirror.openxt.org/GM45_GS45_PM45-SINIT_51.zip;name=gm45 \
+           http://mirror.openxt.org/Q45_Q43-SINIT_51.zip;name=q45 \
+           http://mirror.openxt.org/Q35-SINIT_51.zip;name=q35 \
+           http://mirror.openxt.org/i5_i7_DUAL-SINIT_51.zip;name=i5 \
+           http://mirror.openxt.org/i7_QUAD-SINIT_51.zip;name=i7 \
+           http://mirror.openxt.org/Xeon-5600-3500-SINIT-v1.1.zip;name=xeon_5600 \
+           http://mirror.openxt.org/Xeon-E7-8800-4800-2800-SINIT-v1.1.zip;name=xeon_e7 \
+           http://mirror.openxt.org/3rd-gen-i5-i7-sinit-67.zip;name=ivb_snb \
+           http://mirror.openxt.org/4th-gen-i5-i7-sinit-75.zip;name=hsw \
 "
 
 FILES_${PN} = "/boot"
