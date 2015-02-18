@@ -1,1 +1,28 @@
-This is an experimental repository for turning the OpenEmbedded meta data for OpenXT into a real OpenEmbedded layer instead of a clone of the repository. It is not usable to build OpenXT. The recipies needed by OpenXT will slowly be added to this repo as they are fixed to build against the latest OpenEmbedded master version.
+= Meta-OpenXT
+
+This is an experimental repository for turning the OpenEmbedded meta data for
+OpenXT into a real OpenEmbedded layer instead of a clone of the repository. It
+is not usable to build OpenXT. The recipies needed by OpenXT will slowly be
+added to this repo as they are fixed to build against the latest OpenEmbedded
+master version.
+
+.Recipe Status
+[options="header|footer"]
+|========================
+|Recipe|Parses|Builds|Current Version|Latest Version|Comment
+|trousers|Yes|No|0.3.2|0.3.13|
+|tpm-tools|Yes|Unknown|1.3.1|1.3.8|Can't test because trousers doesn't build
+|tboot|Yes|Unknown|1.7.0|1.8.2|Can't test because trousers doesn't build
+|acms|Yes|Yes|N/A|N/A|
+|bootage|Yes|Unknown|master|master|Requires machine specific configs for xenclient VMs. This should be fixed to build normally. Also should be converted to premirrors from OPENXT_* defines. Also do we need this or can we convert to systemd
+|libbudgetvhd|Yes|No|master|master|Recipes should be converted to premirrors from OPENXT_*. Also what is going on with this insane header generation in libbudgetvhd.
+|libicbinn|Yes|No (Dependencies)|master|master|Recipes should be converted to premirrors from OPENXT_*.
+|libv4v|Yes|No (Dependencies)|master|master|Recipes should be converted to premirrors from OPENXT_*.
+|libx86|Yes|Yes|0.99|1.1|
+|libxcdbus|Yes|No (Dependencies)|master|master|Recipes should be converted to premirrors from OPENXT_*.
+|libxenacpi|Yes|No (Dependencies)|master|master|Recipes should be converted to premirrors from OPENXT_*.
+|xen|Yes|Yes|4.3.3|4.5.0|
+|xen-firmware|Yes|No(Dependencies)|4.3.3|4.5.0|Needs seabios
+|xen-tools|Yes|No(Dependencies)|4.3.3|4.5.0|Needs seabios
+|xen-xsm-policy|Yes|No (Fails Build)|4.3.3|4.5.0|
+|========================
