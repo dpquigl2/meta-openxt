@@ -1,0 +1,56 @@
+# XenClient Synchronizer client VM image
+
+include openxt-image-common.inc
+IMAGE_FEATURES += "package-management"
+
+COMPATIBLE_MACHINE = "(openxt-syncvm)"
+
+IMAGE_FSTYPES = "xc.ext3.vhd.gz"
+
+ANGSTROM_EXTRA_INSTALL += ""
+
+export IMAGE_BASENAME = "openxt-syncvm-image"
+
+DEPENDS = "task-base"
+
+IMAGE_INSTALL = "\
+    ${ROOTFS_PKGMANAGE} \
+    modules \
+    task-core-boot \
+    task-base \
+    task-openxt-common \
+    bootage \
+    kernel-modules \
+    v4v-module \
+    libv4v \
+    libv4v-bin \
+    rsyslog \
+    openssh \
+    blktap \
+    wget \
+    sync-client \
+    ifplugd \
+    openxt-syncvm-tweaks \
+    ${ANGSTROM_EXTRA_INSTALL}"
+
+#IMAGE_PREPROCESS_COMMAND = "create_etc_timestamp"
+
+ROOTFS_POSTPROCESS_COMMAND += "\
+    echo 'ca:12345:ctrlaltdel:/sbin/shutdown -t1 -a -r now' >> ${IMAGE_ROOTFS}/etc/inittab; \
+    sed -i 's|root:x:0:0:root:/home/root:/bin/sh|root:x:0:0:root:/root:/bin/bash|' ${IMAGE_ROOTFS}/etc/passwd; \
+    echo '1.0.0.0 dom0' >> ${IMAGE_ROOTFS}/etc/hosts; \
+    rm -f ${IMAGE_ROOTFS}/etc/resolv.conf; \
+    ln -s /var/volatile/etc/resolv.conf ${IMAGE_ROOTFS}/etc/resolv.conf; \
+    rm -f ${IMAGE_ROOTFS}/etc/network/interfaces; \
+    ln -s /var/volatile/etc/network/interfaces ${IMAGE_ROOTFS}/etc/network/interfaces;"
+
+inherit image
+#inherit validate-package-versions
+inherit openxt-image-src-info
+inherit openxt-image-src-package
+inherit openxt-licences
+require openxt-version.inc
+
+LICENSE = "GPLv2 & MIT"
+LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6      \
+                    file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
