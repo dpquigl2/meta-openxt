@@ -1,9 +1,11 @@
 # XenClient sysroot image
+LICENSE = "GPLv2 & MIT"
+LIC_FILES_CHKSUM = "file://${TOPDIR}/COPYING.GPLv2;md5=751419260aa954499f7abaabaa882bbe      \
+                    file://${TOPDIR}/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 
 include openxt-image-common.inc
 
 COMPATIBLE_MACHINE = "(openxt-dom0)"
-IMAGE_INITSCRIPTS = "openxt-dom0-initscripts"
 
 IMAGE_FSTYPES = "cpio.bz2"
 
@@ -18,60 +20,95 @@ ANGSTROM_EXTRA_INSTALL += " \
 export IMAGE_BASENAME = "openxt-sysroot-image"
 export STAGING_KERNEL_DIR
 
-DEPENDS = "task-base task-openxt-dom0"
+FRIENDLY_NAME = "sysroot"
+
+DEPENDS = "packagegroup-base packagegroup-openxt-dom0 packagegroup-openxt-dom0-extra"
 IMAGE_INSTALL = "\
     ${ROOTFS_PKGMANAGE} \
-    ${IMAGE_INITSCRIPTS} \
+    initscripts \
     modules \
-    task-base \
-    task-core-boot \
-    task-openxt-common \
-    task-openxt-dom0 \
+    packagegroup-base \
+    packagegroup-core-boot \
+    packagegroup-openxt-common \
+    packagegroup-openxt-dom0 \
     essential-target-builddepends \
     ${ANGSTROM_EXTRA_INSTALL}"
 
 #IMAGE_PREPROCESS_COMMAND = "create_etc_timestamp"
 
-#zap root password for release images
-ROOTFS_POSTPROCESS_COMMAND += '${@base_conditional("DISTRO_TYPE", "release", "zap_root_password; ", "",d)}'
-
-ROOTFS_POSTPROCESS_COMMAND += "sed -i 's|root:x:0:0:root:/home/root:/bin/sh|root:x:0:0:root:/root:/bin/bash|' ${IMAGE_ROOTFS}/etc/passwd;"
-
-ROOTFS_POSTPROCESS_COMMAND += "rm ${IMAGE_ROOTFS}/etc/hosts; ln -s /tmp/hosts ${IMAGE_ROOTFS}/etc/hosts;"
-
-# Add initramfs
-ROOTFS_POSTPROCESS_COMMAND += "cat ${DEPLOY_DIR_IMAGE}/openxt-initramfs-image-openxt-dom0.cpio.gz > ${IMAGE_ROOTFS}/boot/initramfs.gz ;" 
-
-ROOTFS_POSTPROCESS_COMMAND += "sed -i 's|1:2345:respawn:/sbin/getty 38400 tty1|#1:2345:respawn:/sbin/getty 38400 tty1|' ${IMAGE_ROOTFS}/etc/inittab ;" 
-
-# Add input demon to inittab (temp hack)
-ROOTFS_POSTPROCESS_COMMAND += "echo 'xi:5:respawn:/usr/bin/input_server >/dev/null 2>&1' >> ${IMAGE_ROOTFS}/etc/inittab ;"
-# Same with surfman
-ROOTFS_POSTPROCESS_COMMAND += "echo 'xs:5:respawn:/usr/bin/watch_surfman >/dev/null 2>&1' >> ${IMAGE_ROOTFS}/etc/inittab ;"
-
-# Add dom0 console getty
-ROOTFS_POSTPROCESS_COMMAND += "echo '1:2345:respawn:/sbin/getty 38400 tty1' >> ${IMAGE_ROOTFS}/etc/inittab ;"
-
-# Create mountpoint for /mnt/secure
-ROOTFS_POSTPROCESS_COMMAND += "mkdir -p ${IMAGE_ROOTFS}/mnt/secure ;"
-
-# Create mountpoint for boot/system
-ROOTFS_POSTPROCESS_COMMAND += "mkdir -p ${IMAGE_ROOTFS}/boot/system ;"
-
-# Remove unwanted packages specified above
-ROOTFS_POSTPROCESS_COMMAND += "opkg-cl ${IPKG_ARGS} -force-depends \
-                                remove ${PACKAGE_REMOVE};"
-
-# Write coredumps in /var/cores
-ROOTFS_POSTPROCESS_COMMAND += "echo 'kernel.core_pattern = /var/cores/%e-%t.%p.core' >> ${IMAGE_ROOTFS}/etc/sysctl.conf ;"
-
-inherit image
+inherit image openxt
 #inherit validate-package-versions
 inherit openxt-image-src-info
 inherit openxt-image-src-package
 inherit openxt-licences
 require openxt-version.inc
 
-LICENSE = "GPLv2 & MIT"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6      \
-                    file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
+do_post_rootfs_commands() {
+	sed -i 's|root:x:0:0:root:/home/root:/bin/sh|root:x:0:0:root:/root:/bin/bash|' ${IMAGE_ROOTFS}/etc/passwd;
+
+	rm ${IMAGE_ROOTFS}/etc/hosts;
+	ln -s /tmp/hosts ${IMAGE_ROOTFS}/etc/hosts;
+
+	# Add initramfs
+	cat ${DEPLOY_DIR_IMAGE}/openxt-initramfs-image-openxt-dom0.cpio.gz > ${IMAGE_ROOTFS}/boot/initramfs.gz;
+
+	sed -i 's|1:2345:respawn:/sbin/getty 38400 tty1|#1:2345:respawn:/sbin/getty 38400 tty1|' ${IMAGE_ROOTFS}/etc/inittab;
+
+	# Add input demon to inittab (temp hack)
+	echo 'xi:5:respawn:/usr/bin/input_server >/dev/null 2>&1' >> ${IMAGE_ROOTFS}/etc/inittab;
+
+	# Same with surfman
+	echo 'xs:5:respawn:/usr/bin/watch_surfman >/dev/null 2>&1' >> ${IMAGE_ROOTFS}/etc/inittab;
+
+	# Add dom0 console getty
+	echo '1:2345:respawn:/sbin/getty 38400 tty1' >> ${IMAGE_ROOTFS}/etc/inittab;
+
+	# Create mountpoint for /mnt/secure
+	mkdir -p ${IMAGE_ROOTFS}/mnt/secure;
+
+	# Create mountpoint for boot/system
+	mkdir -p ${IMAGE_ROOTFS}/boot/system;
+
+	# Remove unwanted packages specified above
+	opkg-cl -f ${IPKGCONF_TARGET} -o ${IMAGE_ROOTFS} ${OPKG_ARGS} -force-depends remove ${PACKAGE_REMOVE};
+
+	# Write coredumps in /var/cores
+	echo 'kernel.core_pattern = /var/cores/%e-%t.%p.core' >> ${IMAGE_ROOTFS}/etc/sysctl.conf;
+}
+
+# Get rid of unneeded initscripts
+remove_initscripts() {
+    if [ -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/hostname.sh ]; then
+        rm -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/hostname.sh
+        update-rc.d -r ${IMAGE_ROOTFS} hostname.sh remove
+    fi
+
+    if [ -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/rmnologin.sh ]; then
+        rm -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/rmnologin.sh
+        update-rc.d -r ${IMAGE_ROOTFS} rmnologin.sh remove
+    fi
+
+    if [ -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/finish.sh ]; then
+        rm -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/finish.sh
+        update-rc.d -r ${IMAGE_ROOTFS} finish.sh remove
+    fi
+
+    if [ -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/mount-special ]; then
+        rm -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/mount-special
+        update-rc.d -r ${IMAGE_ROOTFS} mount-special remove
+    fi
+}
+
+# Symlink /root to /home/root until nothing references /root anymore, e.g. SELinux file_contexts
+link_root_dir() {
+    ln -sf /home/root ${IMAGE_ROOTFS}/root
+}
+
+#zap root password for release images
+ROOTFS_POSTPROCESS_COMMAND += '${@base_conditional("DISTRO_TYPE", "release", "zap_root_password; ", "",d)}'
+
+ROOTFS_POSTPROCESS_COMMAND += ' remove_initscripts; link_root_dir;'
+
+addtask do_post_rootfs_commands after do_rootfs
+addtask ship before do_build after do_rootfs
+

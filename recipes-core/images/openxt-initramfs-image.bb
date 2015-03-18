@@ -1,38 +1,57 @@
-# initramfs image allowing to boot from location as specified on kernel
-# command line, from teh choices of block device, loop back images (including
-# recursive) and NFS.
+SUMMARY = "Initramfs image for OpenXT"
+
+LICENSE = "GPLv2 & MIT"
+LIC_FILES_CHKSUM = "file://${TOPDIR}/COPYING.GPLv2;md5=751419260aa954499f7abaabaa882bbe      \
+                    file://${TOPDIR}/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"
 
 COMPATIBLE_MACHINE = "(openxt-dom0)"
 
-IMAGE_FSTYPES = "cpio.gz"
-IMAGE_INSTALL = "busybox-static lvm2-static initramfs-openxt"
-IMAGE_INSTALL += "openxt-initramfs-tpm-config-files"
-IMAGE_INSTALL += "kernel-module-tpm kernel-module-tpm-bios"
-IMAGE_INSTALL += "kernel-module-tpm-tis"
-IMAGE_INSTALL += "tpm-tools-sa openxt-initramfs-shared-libs"
-IMAGE_INSTALL += "openxt-sha1sum"
-IMAGE_INSTALL += "kernel-module-squashfs"
-IMAGE_INSTALL += "kernel-module-fbcon kernel-module-tileblit kernel-module-font kernel-module-bitblit kernel-module-softcursor"
-IMAGE_INSTALL += "kernel-module-usbhid"
-IMAGE_INSTALL += "kernel-module-ehci-hcd"
-IMAGE_INSTALL += "kernel-module-ehci-pci"
-IMAGE_INSTALL += "kernel-module-uhci-hcd"
-IMAGE_INSTALL += "kernel-module-ohci-hcd"
-IMAGE_INSTALL += "kernel-module-hid"
-IMAGE_INSTALL += "kernel-module-hid-generic"
-IMAGE_INSTALL += "module-init-tools-depmod module-init-tools"
-IMAGE_INSTALL += "policycoreutils-setfiles"
-IMAGE_LINGUAS = ""
-IMAGE_DEV_MANAGER = ""
-IMAGE_BOOT = "${IMAGE_DEV_MANAGER}"
-# Install only ${IMAGE_INSTALL}, not even deps
-PACKAGE_INSTALL_NO_DEPS = "1"
+SRC_URI = "file://initramfs-tcsd.conf \
+           file://initramfs-passwd \
+           file://initramfs-group \
+           file://initramfs-nsswitch.conf \
+"
+
+PACKAGE_INSTALL = " \
+    busybox-static \
+    lvm2-static \
+    initramfs-openxt \
+    kernel-module-tpm \
+    kernel-module-tpm-bios \
+    kernel-module-tpm-tis \
+    tpm-tools-sa \
+    openxt-initramfs-shared-libs \
+    openxt-sha1sum \
+    kernel-module-squashfs \
+    kernel-module-fbcon \
+    kernel-module-tileblit \
+    kernel-module-font \
+    kernel-module-bitblit \
+    kernel-module-softcursor \
+    kernel-module-usbhid \
+    kernel-module-ehci-hcd \
+    kernel-module-ehci-pci \
+    kernel-module-uhci-hcd \
+    kernel-module-ohci-hcd \
+    kernel-module-hid \
+    kernel-module-hid-generic \
+    module-init-tools-depmod \
+    module-init-tools \
+    policycoreutils-setfiles \
+    ${ROOTFS_BOOTSTRAP_INSTALL} \
+    "
 
 # Remove any kernel-image that the kernel-module-* packages may have pulled in.
 PACKAGE_REMOVE = "kernel-image-* update-modules udev sysvinit opkg* mdev*"
 
-ROOTFS_POSTPROCESS_COMMAND += "opkg-cl ${IPKG_ARGS} -force-depends \
-                               remove ${PACKAGE_REMOVE}; "
+IMAGE_LINGUAS = ""
+
+IMAGE_FSTYPES = "cpio.gz"
+
+# Do not pollute the initrd image with rootfs features
+IMAGE_FEATURES = ""
+
+inherit core-image
 
 # Pull in required shared libraries. Having them in a package shared with dom0 causes
 # other packages to depend on it no matter what we put in its recipe...
@@ -45,33 +64,49 @@ EXTRA_INITRAMFS_LIBS = "\
     usr/lib/libssl.so.1.0.0 \
     usr/lib/libtspi_sa.so.1"
 
-ROOTFS_POSTPROCESS_COMMAND += " \
-    install -d ${IMAGE_ROOTFS}/lib; \
-    for a in ${EXTRA_INITRAMFS_LIBS}; do \
-	install -m 0755 ${STAGING_DIR_HOST}/$a ${IMAGE_ROOTFS}/lib; \
-	${STRIP} ${IMAGE_ROOTFS}/lib/`basename $a`; \
-    done; "
+strip_unwanted_packages() {
+	opkg-cl -f ${IPKGCONF_TARGET} -o ${IMAGE_ROOTFS} ${OPKG_ARGS} -force-depends remove ${PACKAGE_REMOVE}
+}
 
-IMAGE_PREPROCESS_COMMAND += " \
-    rm -rvf ${IMAGE_ROOTFS}/usr/lib/opkg; \
-    rm -vf ${IMAGE_ROOTFS}/usr/bin/tpm_sealdata_sa; \
-    rm -vf ${IMAGE_ROOTFS}/usr/bin/tpm_unsealdata_sa; \
-    rm -vf ${IMAGE_ROOTFS}/etc/init.d/hwclock.sh; \
-    rm -vf ${IMAGE_ROOTFS}/etc/init.d/mdev; \
-    rm -vf ${IMAGE_ROOTFS}/etc/rcS.d/S06mdev; \
-    rm -vf ${IMAGE_ROOTFS}/etc/rcS.d/S98configure; \
-    rm -vf ${IMAGE_ROOTFS}/usr/bin/opkg-cl; \
-    rm -vf ${IMAGE_ROOTFS}/usr/lib/ipkg; \
-    rm -vrf ${IMAGE_ROOTFS}/var/lib; \
-    rm -vrf ${IMAGE_ROOTFS}/usr/share/opkg; \
-    rm -vrf ${IMAGE_ROOTFS}/etc/ipkg; \
-    rm -vrf ${IMAGE_ROOTFS}/etc/opkg; \
-"
-inherit image
-#inherit validate-package-versions
-inherit openxt-image-src-info
-inherit openxt-image-src-package
+add_extra_initramfs_libs () {
+	install -d ${IMAGE_ROOTFS}/lib;
+	for a in ${EXTRA_INITRAMFS_LIBS}; do
+		install -m 0755 ${STAGING_DIR_HOST}/$a ${IMAGE_ROOTFS}/lib;
+		${STRIP} ${IMAGE_ROOTFS}/lib/`basename $a`;
+	done; 
+}
 
-LICENSE = "GPLv2 & MIT"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6      \
-                    file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
+write_config_files() {
+	install -m 0600 ${WORKDIR}/initramfs-tcsd.conf ${IMAGE_ROOTFS}${sysconfdir}/tcsd.conf
+	install -m 0644 ${WORKDIR}/initramfs-passwd ${IMAGE_ROOTFS}${sysconfdir}/passwd
+	install -m 0644 ${WORKDIR}/initramfs-group ${IMAGE_ROOTFS}${sysconfdir}/group
+	install -m 0644 ${WORKDIR}/initramfs-nsswitch.conf ${IMAGE_ROOTFS}${sysconfdir}/nsswitch.conf
+}
+
+ROOTFS_POSTPROCESS_COMMAND += "strip_unwanted_packages; add_extra_initramfs_libs; write_config_files; "
+
+strip_files () {
+	rm -rvf ${IMAGE_ROOTFS}/usr/lib/opkg;
+	rm -vf ${IMAGE_ROOTFS}/usr/bin/tpm_sealdata_sa;
+	rm -vf ${IMAGE_ROOTFS}/usr/bin/tpm_unsealdata_sa;
+	rm -vf ${IMAGE_ROOTFS}/etc/init.d/hwclock.sh;
+	rm -vf ${IMAGE_ROOTFS}/etc/init.d/mdev;
+	rm -vf ${IMAGE_ROOTFS}/etc/rcS.d/S06mdev;
+	rm -vf ${IMAGE_ROOTFS}/etc/rcS.d/S98configure;
+	rm -vf ${IMAGE_ROOTFS}/usr/bin/opkg-cl;
+	rm -vf ${IMAGE_ROOTFS}/usr/lib/ipkg;
+	rm -vrf ${IMAGE_ROOTFS}/var/lib;
+	rm -vrf ${IMAGE_ROOTFS}/usr/share/opkg;
+	rm -vrf ${IMAGE_ROOTFS}/etc/ipkg;
+	rm -vrf ${IMAGE_ROOTFS}/etc/opkg;
+}
+
+IMAGE_PREPROCESS_COMMAND += "strip_files; "
+
+addtask rootfs after do_unpack
+
+python () {
+	# Ensure we run these usually noexec tasks
+	d.delVarFlag("do_fetch", "noexec")
+	d.delVarFlag("do_unpack", "noexec")
+}

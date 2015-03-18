@@ -4,7 +4,6 @@ include openxt-image-common.inc
 IMAGE_FEATURES += "package-management"
 
 COMPATIBLE_MACHINE = "(openxt-dom0)"
-IMAGE_INITSCRIPTS = "openxt-dom0-initscripts"
 
 IMAGE_FSTYPES = "xc.ext3.gz"
 
@@ -19,86 +18,132 @@ ANGSTROM_EXTRA_INSTALL += " \
 export IMAGE_BASENAME = "openxt-dom0-image"
 export STAGING_KERNEL_DIR
 
-DEPENDS = "task-base task-openxt-dom0"
+DEPENDS = "packagegroup-base packagegroup-openxt-dom0 packagegroup-openxt-dom0-extra"
 IMAGE_INSTALL = "\
     ${ROOTFS_PKGMANAGE} \
-    ${IMAGE_INITSCRIPTS} \
+    initscripts \
     modules \
-    task-core-boot \
-    task-base \
-    task-openxt-common \
-    task-openxt-dom0 \
+    packagegroup-core-boot \
+    packagegroup-base \
+    packagegroup-openxt-common \
+    packagegroup-openxt-dom0 \
     v4v-module \
     openxt-preload-hs-libs \
     ${ANGSTROM_EXTRA_INSTALL}"
 
 # IMAGE_PREPROCESS_COMMAND = "create_etc_timestamp"
 
+FRIENDLY_NAME = "dom0"
+
+inherit openxt
+
+process_password_stuff() {
+
+	# zap root password in shadow
+	sed -i 's%^root:[^:]*:%root:*:%' ${IMAGE_ROOTFS}/etc/shadow;
+
+	sed -i 's|root:x:0:0:root:/home/root:/bin/sh|root:x:0:0:root:/root:/bin/bash|' ${IMAGE_ROOTFS}/etc/passwd;
+}
+
+# Use version of files in volatile space
+redirect_files() {
+	mkdir -p ${IMAGE_ROOTFS}/config/etc;
+	mv ${IMAGE_ROOTFS}/etc/passwd ${IMAGE_ROOTFS}/config/etc;
+	mv ${IMAGE_ROOTFS}/etc/shadow ${IMAGE_ROOTFS}/config/etc;
+	ln -s ../config/etc/passwd ${IMAGE_ROOTFS}/etc/passwd;
+	ln -s ../config/etc/shadow ${IMAGE_ROOTFS}/etc/shadow;
+	ln -s ../config/etc/.pwd.lock ${IMAGE_ROOTFS}/etc/.pwd.lock;
+	ln -s ../var/volatile/etc/asound ${IMAGE_ROOTFS}/etc/asound;
+
+	rm ${IMAGE_ROOTFS}/etc/hosts; ln -s /var/run/hosts ${IMAGE_ROOTFS}/etc/hosts;
+	ln -s /var/volatile/etc/resolv.conf ${IMAGE_ROOTFS}/etc/resolv.conf;
+
+	# Write coredumps in /var/cores
+	echo 'kernel.core_pattern = /var/cores/%e-%t.%p.core' >> ${IMAGE_ROOTFS}/etc/sysctl.conf ;
+}
+
+grab_initramfs() {
+	cat ${DEPLOY_DIR_IMAGE}/openxt-initramfs-image-openxt-dom0.cpio.gz > ${IMAGE_ROOTFS}/boot/initramfs.gz ;
+}
+
+set_ratelimit() {
+	echo 'kernel.printk_ratelimit = 0' >> ${IMAGE_ROOTFS}/etc/sysctl.conf;
+}
+
+set_consoles() {
+	# Add dom0 console getty
+	sed -i 's|1:2345:respawn:/sbin/getty 38400 tty1|#1:2345:respawn:/sbin/getty 38400 tty1|' ${IMAGE_ROOTFS}/etc/inittab ;
+
+	echo '1:2345:respawn:/sbin/getty 38400 tty1' >> ${IMAGE_ROOTFS}/etc/inittab ;
+}
+
+create_mounts() {
+	# Create mountpoint for /mnt/secure
+	mkdir -p ${IMAGE_ROOTFS}/mnt/secure ;
+
+	# Create mountpoint for /mnt/upgrade
+	mkdir -p ${IMAGE_ROOTFS}/mnt/upgrade ;
+
+	# Create mountpoint for boot/system
+	mkdir -p ${IMAGE_ROOTFS}/boot/system ;
+}
+
+remove_unwanted_packages() {
+	opkg-cl -f ${IPKGCONF_TARGET} -o ${IMAGE_ROOTFS} ${OPKG_ARGS} -force-depends remove ${PACKAGE_REMOVE};
+}
+
+# Remove network modules except netfront
+remove_excess_modules() {
+	for x in `find ${IMAGE_ROOTFS}/lib/modules -name *.ko | grep drivers/net | grep -v xen-netfront`; do
+		pkg="kernel-module-`basename $x .ko | sed s/_/-/g`";
+		opkg-cl ${IPKG_ARGS} -force-depends remove $pkg;
+	done;
+}
+
+### Stubdomain stuff - temporary
+STUBDOMAIN_DEPLOY_DIR_IMAGE = "${DEPLOY_DIR}/images/openxt-stubdomain"
+STUBDOMAIN_IMAGE = "${STUBDOMAIN_DEPLOY_DIR_IMAGE}/openxt-stubdomain-initramfs-image-openxt-stubdomain.cpio.gz"
+STUBDOMAIN_KERNEL = "${STUBDOMAIN_DEPLOY_DIR_IMAGE}/bzImage-openxt-stubdomain.bin"
+process_tmp_stubdomain_items() {
+	mkdir -p ${IMAGE_ROOTFS}/usr/lib/xen/boot ;
+	cat ${STUBDOMAIN_IMAGE} > ${IMAGE_ROOTFS}/usr/lib/xen/boot/stubdomain-initramfs ;
+	cat ${STUBDOMAIN_KERNEL} > ${IMAGE_ROOTFS}/usr/lib/xen/boot/stubdomain-bzImage ; 
+}
+
+# Get rid of unneeded initscripts
+remove_initscripts() {
+    if [ -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/hostname.sh ]; then
+        rm -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/hostname.sh
+        update-rc.d -r ${IMAGE_ROOTFS} hostname.sh remove
+    fi
+
+    if [ -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/rmnologin.sh ]; then
+        rm -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/rmnologin.sh
+        update-rc.d -r ${IMAGE_ROOTFS} rmnologin.sh remove
+    fi
+
+    if [ -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/finish.sh ]; then
+        rm -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/finish.sh
+        update-rc.d -r ${IMAGE_ROOTFS} finish.sh remove
+    fi
+
+    if [ -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/mount-special ]; then
+        rm -f ${IMAGE_ROOTFS}${sysconfdir}/init.d/mount-special
+        update-rc.d -r ${IMAGE_ROOTFS} mount-special remove
+    fi
+}
+
+# Symlink /root to /home/root until nothing references /root anymore, e.g. SELinux file_contexts
+link_root_dir() {
+    ln -sf /home/root ${IMAGE_ROOTFS}/root
+}
+
 #zap root password for release images
 ROOTFS_POSTPROCESS_COMMAND += '${@base_conditional("DISTRO_TYPE", "release", "zap_root_password; ", "",d)}'
 
-# zap root password in shadow
-ROOTFS_POSTPROCESS_COMMAND += "sed -i 's%^root:[^:]*:%root:*:%' ${IMAGE_ROOTFS}/etc/shadow;"
+ROOTFS_POSTPROCESS_COMMAND += " process_password_stuff; redirect_files; grab_initramfs; set_ratelimit; set_consoles; create_mounts; remove_unwanted_packages; remove_excess_modules; process_tmp_stubdomain_items; remove_initscripts; link_root_dir;"
 
-ROOTFS_POSTPROCESS_COMMAND += "sed -i 's|root:x:0:0:root:/home/root:/bin/sh|root:x:0:0:root:/root:/bin/bash|' ${IMAGE_ROOTFS}/etc/passwd;"
-
-ROOTFS_POSTPROCESS_COMMAND += " \
-    mkdir -p ${IMAGE_ROOTFS}/config/etc; \
-    mv ${IMAGE_ROOTFS}/etc/passwd ${IMAGE_ROOTFS}/config/etc; \
-    mv ${IMAGE_ROOTFS}/etc/shadow ${IMAGE_ROOTFS}/config/etc; \
-    ln -s ../config/etc/passwd ${IMAGE_ROOTFS}/etc/passwd; \
-    ln -s ../config/etc/shadow ${IMAGE_ROOTFS}/etc/shadow; \
-    ln -s ../config/etc/.pwd.lock ${IMAGE_ROOTFS}/etc/.pwd.lock; \
-    ln -s ../var/volatile/etc/asound ${IMAGE_ROOTFS}/etc/asound; \
-"
-
-ROOTFS_POSTPROCESS_COMMAND += "rm ${IMAGE_ROOTFS}/etc/hosts; ln -s /var/run/hosts ${IMAGE_ROOTFS}/etc/hosts;"
-
-ROOTFS_POSTPROCESS_COMMAND += "ln -s /var/volatile/etc/resolv.conf ${IMAGE_ROOTFS}/etc/resolv.conf;"
-
-ROOTFS_POSTPROCESS_COMMAND += "echo 'kernel.printk_ratelimit = 0' >> ${IMAGE_ROOTFS}/etc/sysctl.conf;"
-
-# Add initramfs
-ROOTFS_POSTPROCESS_COMMAND += "cat ${DEPLOY_DIR_IMAGE}/openxt-initramfs-image-openxt-dom0.cpio.gz > ${IMAGE_ROOTFS}/boot/initramfs.gz ;" 
-
-ROOTFS_POSTPROCESS_COMMAND += "sed -i 's|1:2345:respawn:/sbin/getty 38400 tty1|#1:2345:respawn:/sbin/getty 38400 tty1|' ${IMAGE_ROOTFS}/etc/inittab ;" 
-
-# Add dom0 console getty
-ROOTFS_POSTPROCESS_COMMAND += "echo '1:2345:respawn:/sbin/getty 38400 tty1' >> ${IMAGE_ROOTFS}/etc/inittab ;"
-
-# Create mountpoint for /mnt/secure
-ROOTFS_POSTPROCESS_COMMAND += "mkdir -p ${IMAGE_ROOTFS}/mnt/secure ;"
-
-# Create mountpoint for /mnt/upgrade
-ROOTFS_POSTPROCESS_COMMAND += "mkdir -p ${IMAGE_ROOTFS}/mnt/upgrade ;"
-
-# Create mountpoint for boot/system
-ROOTFS_POSTPROCESS_COMMAND += "mkdir -p ${IMAGE_ROOTFS}/boot/system ;"
-
-# Remove unwanted packages specified above
-ROOTFS_POSTPROCESS_COMMAND += "opkg-cl ${IPKG_ARGS} -force-depends \
-                                remove ${PACKAGE_REMOVE};"
-
-# Remove network modules except netfront
-ROOTFS_POSTPROCESS_COMMAND += "\
-  for x in `find ${IMAGE_ROOTFS}/lib/modules -name *.ko | grep drivers/net | grep -v xen-netfront`; do \
-    pkg="kernel-module-`basename $x .ko | sed s/_/-/g`"; \
-    opkg-cl ${IPKG_ARGS} -force-depends remove $pkg; \
-  done; \
-"
-
-
-# Write coredumps in /var/cores
-ROOTFS_POSTPROCESS_COMMAND += "echo 'kernel.core_pattern = /var/cores/%e-%t.%p.core' >> ${IMAGE_ROOTFS}/etc/sysctl.conf ;"
-
-### Stubdomain stuff - temporary
-STUBDOMAIN_DEPLOY_DIR_IMAGE = "${DEPLOY_DIR_IMAGE}"
-STUBDOMAIN_IMAGE = "${STUBDOMAIN_DEPLOY_DIR_IMAGE}/openxt-stubdomain-initramfs-image-openxt-stubdomain.cpio.gz"
-STUBDOMAIN_KERNEL = "${STUBDOMAIN_DEPLOY_DIR_IMAGE}/vmlinuz-openxt-stubdomain.bin"
-ROOTFS_POSTPROCESS_COMMAND += "mkdir -p ${IMAGE_ROOTFS}/usr/lib/xen/boot ;"
-ROOTFS_POSTPROCESS_COMMAND += "cat ${STUBDOMAIN_IMAGE} > ${IMAGE_ROOTFS}/usr/lib/xen/boot/stubdomain-initramfs ;" 
-ROOTFS_POSTPROCESS_COMMAND += "cat ${STUBDOMAIN_KERNEL} > ${IMAGE_ROOTFS}/usr/lib/xen/boot/stubdomain-bzImage ;" 
-### End of stubdomain stuff
+addtask ship before do_build after do_rootfs
 
 inherit selinux-image
 #inherit validate-package-versions
@@ -108,5 +153,5 @@ inherit openxt-licences
 require openxt-version.inc
 
 LICENSE = "GPLv2 & MIT"
-LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/GPL-2.0;md5=801f80980d171dd6425610833a22dbe6      \
-                    file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
+LIC_FILES_CHKSUM = "file://${TOPDIR}/COPYING.GPLv2;md5=751419260aa954499f7abaabaa882bbe      \
+                    file://${TOPDIR}/COPYING.MIT;md5=3da9cfbcb788c80a0384361b4de20420"

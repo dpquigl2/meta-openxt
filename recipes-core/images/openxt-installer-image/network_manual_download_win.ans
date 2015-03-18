@@ -12,7 +12,7 @@ touch /config/etc/ssh/enabled
 <allow-dev-repo-cert>true</allow-dev-repo-cert>
 <postinstall>#!/bin/ash -e
 mkdir -p /mnt/storage
-mount /dev/xenclient/storage /mnt/storage
+mount /dev/openxt/storage /mnt/storage
 mkdir -p /mnt/storage/isos
 cd /mnt/storage/isos
 # Assume the network is already available:
