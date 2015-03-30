@@ -6,7 +6,7 @@ PR = "r0xc2"
 LICENSE = "GPL-2.0 & AFL-2.1"
 LIC_FILES_CHKSUM = "file://COPYING;md5=10dded3b58148f3f1fd804b26354af3e"
 DEPENDS += "libselinux libv4v xen-tools"
-RDEPENDS += "libselinux"
+RDEPENDS_${PN} += "libselinux"
 
 SRC_URI = "\
   http://dbus.freedesktop.org/releases/dbus/dbus-${PV}.tar.gz;name=dbus \
