@@ -1,4 +1,3 @@
-PRINC = "4"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 EXTRA_OECONF += "--enable-static --with-selinux"
