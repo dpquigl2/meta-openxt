@@ -1,0 +1,59 @@
+diff -rupN ghc-7.8.4-orig/ghc.mk ghc-7.8.4/ghc.mk
+--- ghc-7.8.4-orig/ghc.mk	2015-03-30 09:10:25.325872594 -0400
++++ ghc-7.8.4/ghc.mk	2015-03-30 09:11:49.115876064 -0400
+@@ -386,7 +386,7 @@ else
+ PACKAGES_STAGE0 = Cabal/Cabal hpc bin-package-db hoopl transformers
+ ifeq "$(Windows_Host)" "NO"
+ ifneq "$(HostOS_CPP)" "ios"
+-PACKAGES_STAGE0 += terminfo
++#PACKAGES_STAGE0 += terminfo
+ endif
+ endif
+ 
+@@ -428,10 +428,10 @@ endif
+ PACKAGES_STAGE1 += xhtml
+ ifeq "$(Windows_Target)" "NO"
+ ifneq "$(TargetOS_CPP)" "ios"
+-PACKAGES_STAGE1 += terminfo
++#PACKAGES_STAGE1 += terminfo
+ endif
+ endif
+-PACKAGES_STAGE1 += haskeline
++#PACKAGES_STAGE1 += haskeline
+ 
+ # We normally install only the packages down to this point
+ REGULAR_INSTALL_PACKAGES := $(addprefix libraries/,$(PACKAGES_STAGE1))
+diff -rupN ghc-7.8.4-orig/packages ghc-7.8.4/packages
+--- ghc-7.8.4-orig/packages	2015-03-30 09:10:25.409872598 -0400
++++ ghc-7.8.4/packages	2015-03-30 09:10:39.515873182 -0400
+@@ -58,7 +58,7 @@ libraries/deepseq            -
+ libraries/directory          -           packages/directory.git          -
+ libraries/filepath           -           packages/filepath.git           -
+ libraries/ghc-prim           -           packages/ghc-prim.git           -
+-libraries/haskeline          -           -                               https://github.com/judah/haskeline.git
++#libraries/haskeline          -           -                               https://github.com/judah/haskeline.git
+ libraries/haskell98          -           packages/haskell98.git          -
+ libraries/haskell2010        -           packages/haskell2010.git        -
+ libraries/hoopl              -           packages/hoopl.git              -
+@@ -70,7 +70,7 @@ libraries/old-time           -
+ libraries/pretty             -           -                               https://github.com/haskell/pretty.git
+ libraries/process            -           packages/process.git            -
+ libraries/template-haskell   -           packages/template-haskell.git   -
+-libraries/terminfo           -           -                               https://github.com/judah/terminfo.git
++#libraries/terminfo           -           -                               https://github.com/judah/terminfo.git
+ libraries/time               -           -                               http://git.haskell.org/darcs-mirrors/time.git
+ libraries/transformers       -           -                               http://git.haskell.org/darcs-mirrors/transformers.git
+ libraries/unix               -           packages/unix.git               -
+diff -rupN ghc-7.8.4-orig/utils/ghc-pkg/ghc-pkg.cabal ghc-7.8.4/utils/ghc-pkg/ghc-pkg.cabal
+--- ghc-7.8.4-orig/utils/ghc-pkg/ghc-pkg.cabal	2015-03-30 09:41:48.787950595 -0400
++++ ghc-7.8.4/utils/ghc-pkg/ghc-pkg.cabal	2015-03-30 09:41:29.243949785 -0400
+@@ -27,7 +27,7 @@ Executable ghc-pkg
+                    bin-package-db,
+                    bytestring
+     if !os(windows)
+-        Build-Depends: unix,
+-                       terminfo
++        Build-Depends: unix
++--                       terminfo
+     if os(windows)
+         c-sources: CRT_noglob.c

@@ -1,0 +1,14 @@
+diff --git a/configure b/configure
+index 5906d75..8cf5bf4 100755
+--- a/configure
++++ b/configure
+@@ -7654,7 +7654,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+ 
+     checkVendor() {
+         case $1 in
+-        dec|unknown|hp|apple|next|sun|sgi|ibm|montavista|portbld)
++        dec|unknown|hp|apple|next|sun|sgi|ibm|montavista|portbld|oe|pc|gentoo)
+             ;;
+         *)
+             echo "Unknown vendor $1"
+
