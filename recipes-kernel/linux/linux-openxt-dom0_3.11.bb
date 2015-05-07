@@ -3,5 +3,5 @@ COMPATIBLE_MACHINE = "(openxt-dom0)"
 
 require linux-openxt-${PV}.inc
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}-3.11"
+FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}-3.11:"
 
