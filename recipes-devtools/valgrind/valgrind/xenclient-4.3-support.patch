@@ -1,6 +1,6 @@
-diff -rupN valgrind-3.10.1-orig/coregrind/m_syswrap/syswrap-linux.c valgrind-3.10.1/coregrind/m_syswrap/syswrap-linux.c
---- valgrind-3.10.1-orig/coregrind/m_syswrap/syswrap-linux.c	2015-03-25 14:17:12.558744351 -0400
-+++ valgrind-3.10.1/coregrind/m_syswrap/syswrap-linux.c	2015-03-26 10:36:19.230773596 -0400
+diff -rupN valgrind-3.10.1.orig/coregrind/m_syswrap/syswrap-linux.c valgrind-3.10.1/coregrind/m_syswrap/syswrap-linux.c
+--- valgrind-3.10.1.orig/coregrind/m_syswrap/syswrap-linux.c	2015-05-08 14:48:32.690977029 -0400
++++ valgrind-3.10.1/coregrind/m_syswrap/syswrap-linux.c	2015-05-08 14:50:21.027977017 -0400
 @@ -7138,6 +7138,16 @@ PRE(sys_ioctl)
        break;
     }
@@ -26,9 +26,9 @@ diff -rupN valgrind-3.10.1-orig/coregrind/m_syswrap/syswrap-linux.c valgrind-3.1
     case VKI_XEN_IOCTL_EVTCHN_BIND_VIRQ:
     case VKI_XEN_IOCTL_EVTCHN_BIND_INTERDOMAIN:
     case VKI_XEN_IOCTL_EVTCHN_BIND_UNBOUND_PORT:
-diff -rupN valgrind-3.10.1-orig/coregrind/m_syswrap/syswrap-xen.c valgrind-3.10.1/coregrind/m_syswrap/syswrap-xen.c
---- valgrind-3.10.1-orig/coregrind/m_syswrap/syswrap-xen.c	2015-03-25 14:17:12.556744351 -0400
-+++ valgrind-3.10.1/coregrind/m_syswrap/syswrap-xen.c	2015-03-26 09:59:55.943683179 -0400
+diff -rupN valgrind-3.10.1.orig/coregrind/m_syswrap/syswrap-xen.c valgrind-3.10.1/coregrind/m_syswrap/syswrap-xen.c
+--- valgrind-3.10.1.orig/coregrind/m_syswrap/syswrap-xen.c	2015-05-08 14:48:32.684977029 -0400
++++ valgrind-3.10.1/coregrind/m_syswrap/syswrap-xen.c	2015-05-08 14:50:21.028977017 -0400
 @@ -202,6 +202,19 @@ PRE(memory_op)
     case VKI_XENMEM_get_sharing_shared_pages:
        break;
@@ -360,9 +360,9 @@ diff -rupN valgrind-3.10.1-orig/coregrind/m_syswrap/syswrap-xen.c valgrind-3.10.
  
     //    __VKI_XEN_callback_op                                     // 30
     //    __VKI_XEN_xenoprof_op                                     // 31
-diff -rupN valgrind-3.10.1-orig/include/Makefile.am valgrind-3.10.1/include/Makefile.am
---- valgrind-3.10.1-orig/include/Makefile.am	2015-03-25 14:17:12.626744354 -0400
-+++ valgrind-3.10.1/include/Makefile.am	2015-03-26 10:00:22.499684279 -0400
+diff -rupN valgrind-3.10.1.orig/include/Makefile.am valgrind-3.10.1/include/Makefile.am
+--- valgrind-3.10.1.orig/include/Makefile.am	2015-05-08 14:48:32.950977029 -0400
++++ valgrind-3.10.1/include/Makefile.am	2015-05-08 14:50:21.028977017 -0400
 @@ -73,6 +73,7 @@ nobase_pkginclude_HEADERS = \
  	vki/vki-scnums-mips64-linux.h	\
  	vki/vki-scnums-darwin.h         \
@@ -371,9 +371,9 @@ diff -rupN valgrind-3.10.1-orig/include/Makefile.am valgrind-3.10.1/include/Make
  	vki/vki-xen-domctl.h		\
  	vki/vki-xen-evtchn.h		\
  	vki/vki-xen-gnttab.h		\
-diff -rupN valgrind-3.10.1-orig/include/vki/vki-linux.h valgrind-3.10.1/include/vki/vki-linux.h
---- valgrind-3.10.1-orig/include/vki/vki-linux.h	2015-03-25 14:17:12.624744353 -0400
-+++ valgrind-3.10.1/include/vki/vki-linux.h	2015-03-26 10:01:42.812687605 -0400
+diff -rupN valgrind-3.10.1.orig/include/vki/vki-linux.h valgrind-3.10.1/include/vki/vki-linux.h
+--- valgrind-3.10.1.orig/include/vki/vki-linux.h	2015-05-08 14:48:32.942977029 -0400
++++ valgrind-3.10.1/include/vki/vki-linux.h	2015-05-08 14:50:21.029977017 -0400
 @@ -3234,11 +3234,17 @@ struct vki_xen_privcmd_mmapbatch_v2 {
          int __user *err;  /* array of error codes */
  };
@@ -392,9 +392,9 @@ diff -rupN valgrind-3.10.1-orig/include/vki/vki-linux.h valgrind-3.10.1/include/
  
  //----------------------------------------------------------------------
  // Xen evtchn IOCTL
-diff -rupN valgrind-3.10.1-orig/include/vki/vki-xen-domctl.h valgrind-3.10.1/include/vki/vki-xen-domctl.h
---- valgrind-3.10.1-orig/include/vki/vki-xen-domctl.h	2015-03-25 14:17:12.625744353 -0400
-+++ valgrind-3.10.1/include/vki/vki-xen-domctl.h	2015-03-26 10:05:37.444697322 -0400
+diff -rupN valgrind-3.10.1.orig/include/vki/vki-xen-domctl.h valgrind-3.10.1/include/vki/vki-xen-domctl.h
+--- valgrind-3.10.1.orig/include/vki/vki-xen-domctl.h	2015-05-08 14:48:32.945977029 -0400
++++ valgrind-3.10.1/include/vki/vki-xen-domctl.h	2015-05-08 14:50:21.029977017 -0400
 @@ -86,6 +86,7 @@
  #define VKI_XEN_DOMCTL_getnodeaffinity               69
  #define VKI_XEN_DOMCTL_set_max_evtchn                70
@@ -447,20 +447,9 @@ diff -rupN valgrind-3.10.1-orig/include/vki/vki-xen-domctl.h valgrind-3.10.1/inc
          //struct vki_xen_domctl_ext_vcpucontext   ext_vcpucontext;
          //struct vki_xen_domctl_set_target        set_target;
          //struct vki_xen_domctl_subscribe         subscribe;
-diff -rupN valgrind-3.10.1-orig/include/vki/vki-xen.h valgrind-3.10.1/include/vki/vki-xen.h
---- valgrind-3.10.1-orig/include/vki/vki-xen.h	2015-03-25 14:17:12.625744353 -0400
-+++ valgrind-3.10.1/include/vki/vki-xen.h	2015-03-26 10:06:21.208699134 -0400
-@@ -85,6 +85,7 @@ struct vki_xenctl_bitmap {
- #include <vki/vki-xen-gnttab.h>
- #include <vki/vki-xen-version.h>
- #include <vki/vki-xen-hvm.h>
-+#include <vki/vki-xen-sched.h>
- #include <vki/vki-xen-tmem.h>
- 
- #endif // __VKI_XEN_H
-diff -rupN valgrind-3.10.1-orig/include/vki/vki-xen-hvm.h valgrind-3.10.1/include/vki/vki-xen-hvm.h
---- valgrind-3.10.1-orig/include/vki/vki-xen-hvm.h	2015-03-25 14:17:12.623744353 -0400
-+++ valgrind-3.10.1/include/vki/vki-xen-hvm.h	2015-03-26 10:33:06.149765600 -0400
+diff -rupN valgrind-3.10.1.orig/include/vki/vki-xen-hvm.h valgrind-3.10.1/include/vki/vki-xen-hvm.h
+--- valgrind-3.10.1.orig/include/vki/vki-xen-hvm.h	2015-05-08 14:48:32.941977029 -0400
++++ valgrind-3.10.1/include/vki/vki-xen-hvm.h	2015-05-08 14:50:21.029977017 -0400
 @@ -26,6 +26,23 @@ struct vki_xen_hvm_set_pci_link_route {
  };
  typedef struct vki_xen_hvm_set_pci_link_route vki_xen_hvm_set_pci_link_route_t;
@@ -571,24 +560,15 @@ diff -rupN valgrind-3.10.1-orig/include/vki/vki-xen-hvm.h valgrind-3.10.1/includ
  #endif // __VKI_XEN_HVM_H
  
  /*--------------------------------------------------------------------*/
-diff -rupN valgrind-3.10.1-orig/include/vki/vki-xen-memory.h valgrind-3.10.1/include/vki/vki-xen-memory.h
---- valgrind-3.10.1-orig/include/vki/vki-xen-memory.h	2015-03-25 14:17:12.624744353 -0400
-+++ valgrind-3.10.1/include/vki/vki-xen-memory.h	2015-03-26 10:33:37.598766902 -0400
-@@ -22,6 +22,27 @@
+diff -rupN valgrind-3.10.1.orig/include/vki/vki-xen-memory.h valgrind-3.10.1/include/vki/vki-xen-memory.h
+--- valgrind-3.10.1.orig/include/vki/vki-xen-memory.h	2015-05-08 14:48:32.942977029 -0400
++++ valgrind-3.10.1/include/vki/vki-xen-memory.h	2015-05-08 14:50:58.262977012 -0400
+@@ -22,6 +22,18 @@
  #define VKI_XENMEM_get_sharing_shared_pages   19
  #define VKI_XENMEM_access_op                  21
  #define VKI_XENMEM_claim_pages                24
 +#define VKI_XENMEM_translate_gpfn_list	29
 +#define VKI_XENMEM_release_mfn_list	30
-+
-+struct vki_xen_add_to_physmap {
-+    /* In parameters. */
-+    vki_xen_domid_t domid;
-+    vki_uint16_t size;
-+    unsigned int space;
-+    vki_xen_ulong_t idx;
-+    vki_xen_pfn_t gpfn;
-+};
 +
 +struct vki_xen_translate_gpfn_list {
 +    /* IN parameters */
@@ -602,9 +582,9 @@ diff -rupN valgrind-3.10.1-orig/include/vki/vki-xen-memory.h valgrind-3.10.1/inc
  
  struct vki_xen_memory_map {
      unsigned int nr_entries;
-diff -rupN valgrind-3.10.1-orig/include/vki/vki-xen-sched.h valgrind-3.10.1/include/vki/vki-xen-sched.h
---- valgrind-3.10.1-orig/include/vki/vki-xen-sched.h	1969-12-31 19:00:00.000000000 -0500
-+++ valgrind-3.10.1/include/vki/vki-xen-sched.h	2015-03-26 10:34:30.420769090 -0400
+diff -rupN valgrind-3.10.1.orig/include/vki/vki-xen-sched.h valgrind-3.10.1/include/vki/vki-xen-sched.h
+--- valgrind-3.10.1.orig/include/vki/vki-xen-sched.h	1969-12-31 19:00:00.000000000 -0500
++++ valgrind-3.10.1/include/vki/vki-xen-sched.h	2015-05-08 14:50:21.029977017 -0400
 @@ -0,0 +1,35 @@
 +#ifndef __VKI_XEN_SCHED_H
 +#define __VKI_XEN_SCHED_H
@@ -641,3 +621,14 @@ diff -rupN valgrind-3.10.1-orig/include/vki/vki-xen-sched.h valgrind-3.10.1/incl
 +/*--------------------------------------------------------------------*/
 +/*--- end                                                          ---*/
 +/*--------------------------------------------------------------------*/
+diff -rupN valgrind-3.10.1.orig/include/vki/vki-xen.h valgrind-3.10.1/include/vki/vki-xen.h
+--- valgrind-3.10.1.orig/include/vki/vki-xen.h	2015-05-08 14:48:32.946977029 -0400
++++ valgrind-3.10.1/include/vki/vki-xen.h	2015-05-08 14:50:21.029977017 -0400
+@@ -85,6 +85,7 @@ struct vki_xenctl_bitmap {
+ #include <vki/vki-xen-gnttab.h>
+ #include <vki/vki-xen-version.h>
+ #include <vki/vki-xen-hvm.h>
++#include <vki/vki-xen-sched.h>
+ #include <vki/vki-xen-tmem.h>
+ 
+ #endif // __VKI_XEN_H
