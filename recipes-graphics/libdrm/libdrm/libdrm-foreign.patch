@@ -1,0 +1,32 @@
+diff -rupN libdrm-2.4.59.orig/include/drm/i915_drm.h libdrm-2.4.59/include/drm/i915_drm.h
+--- libdrm-2.4.59.orig/include/drm/i915_drm.h	2015-05-11 14:21:00.787946297 -0400
++++ libdrm-2.4.59/include/drm/i915_drm.h	2015-05-11 14:23:39.940946278 -0400
+@@ -224,6 +224,7 @@ typedef struct _drm_i915_sarea {
+ #define DRM_I915_REG_READ		0x31
+ #define DRM_I915_GET_RESET_STATS	0x32
+ #define DRM_I915_GEM_USERPTR		0x33
++#define DRM_I915_GEM_FOREIGN		0x34
+ 
+ #define DRM_IOCTL_I915_INIT		DRM_IOW( DRM_COMMAND_BASE + DRM_I915_INIT, drm_i915_init_t)
+ #define DRM_IOCTL_I915_FLUSH		DRM_IO ( DRM_COMMAND_BASE + DRM_I915_FLUSH)
+@@ -275,6 +276,7 @@ typedef struct _drm_i915_sarea {
+ #define DRM_IOCTL_I915_REG_READ			DRM_IOWR (DRM_COMMAND_BASE + DRM_I915_REG_READ, struct drm_i915_reg_read)
+ #define DRM_IOCTL_I915_GET_RESET_STATS		DRM_IOWR (DRM_COMMAND_BASE + DRM_I915_GET_RESET_STATS, struct drm_i915_reset_stats)
+ #define DRM_IOCTL_I915_GEM_USERPTR		DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_GEM_USERPTR,  struct drm_i915_gem_userptr)
++#define DRM_IOCTL_I915_GEM_FOREIGN		DRM_IOWR(DRM_COMMAND_BASE + DRM_I915_GEM_FOREIGN,  struct drm_i915_gem_foreign)
+ 
+ /* Allow drivers to submit batchbuffers directly to hardware, relying
+  * on the security mechanisms provided by hardware.
+@@ -1066,4 +1068,12 @@ struct drm_i915_gem_userptr {
+ 	__u32 handle;
+ };
+ 
++struct drm_i915_gem_foreign {
++        __u64 *mfns;
++        __u32 num_pages;
++#define I915_FOREIGN_BALLOON_PAGES 0x00000001
++#define I915_FOREIGN_BALLOON_HIGH  0x00000002
++        __u32 flags;
++        __u32 handle;
++};
+ #endif /* _I915_DRM_H_ */
